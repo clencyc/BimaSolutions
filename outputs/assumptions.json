@@ -1,0 +1,93 @@
+{
+  "data_is_synthetic": "Exposure portfolio is synthetic (starter kit). Hazard is a terrain-based proxy, not measured flood depth.",
+  "H1_tier_to_return_period": {
+    "statement": "Smallest footprint tier (file 'extreme', 5% of cells) is the most frequent scenario; largest footprint (file 'common', 40%) is the rarest. Return periods 5/10/25/100/250 years are assumed.",
+    "scenarios": [
+      {
+        "name": "RP5",
+        "return_period": 5,
+        "footprint_tier": "extreme"
+      },
+      {
+        "name": "RP10",
+        "return_period": 10,
+        "footprint_tier": "severe"
+      },
+      {
+        "name": "RP25",
+        "return_period": 25,
+        "footprint_tier": "moderate"
+      },
+      {
+        "name": "RP100",
+        "return_period": 100,
+        "footprint_tier": "occasional"
+      },
+      {
+        "name": "RP250",
+        "return_period": 250,
+        "footprint_tier": "common"
+      }
+    ]
+  },
+  "H2_depth_conversion": {
+    "statement": "depth_m = DEPTH_REFERENCE_M * max(0, S - t_k); S=1 in the rarest scenario corresponds to 4 m (document example).",
+    "depth_reference_m": 4.0
+  },
+  "H3_ml_hazard_augmentation": {
+    "statement": "S_aug = max(S_proxy, S_hotspot_ref * max(ml_likelihood, hotspot_proximity_kernel)).",
+    "hotspot_kernel_sigma_m": 500.0,
+    "hotspot_kernel_cutoff_m": 1500.0,
+    "negative_buffer_m": 1500.0,
+    "ml_flag_threshold": 0.5
+  },
+  "V1_reference_curve": {
+    "source": "Huizinga, de Moel & Szewczyk (2017), JRC EUR 28552 EN, residential, Africa",
+    "depth_m": [
+      0.0,
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0
+    ],
+    "damage_fraction": [
+      0.0,
+      0.22,
+      0.38,
+      0.53,
+      0.64,
+      0.82,
+      0.9,
+      0.96,
+      1.0
+    ]
+  },
+  "V2_housing_class_adaptation": {
+    "informal_iron_sheet": {
+      "depth_multiplier": 1.5,
+      "max_damage_ratio": 0.95,
+      "rationale": "single-storey, light materials, contents at floor level"
+    },
+    "semi_permanent": {
+      "depth_multiplier": 1.2,
+      "max_damage_ratio": 0.9,
+      "rationale": "mixed materials, limited water resistance"
+    },
+    "permanent_masonry": {
+      "depth_multiplier": 1.0,
+      "max_damage_ratio": 0.85,
+      "rationale": "reference class: closest to JRC residential building"
+    },
+    "concrete_rcc": {
+      "depth_multiplier": 0.7,
+      "max_damage_ratio": 0.8,
+      "rationale": "often multi-storey; only lower floors affected"
+    }
+  },
+  "financial_engine": "loss = damage_ratio * tiv_kes per building per scenario; portfolio loss = sum over buildings; AAL by trapezoidal integration of the EP curve (loss assumed zero for events more frequent than the 5-year scenario and flat beyond 250 years).",
+  "random_seed": 42
+}

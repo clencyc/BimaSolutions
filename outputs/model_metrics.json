@@ -1,0 +1,159 @@
+{
+  "selected_model": "logistic_regression",
+  "model_selection_rule": "highest mean average precision in 5-fold x 20-repeat stratified CV; ties within one standard error resolved toward the simpler model",
+  "cross_validation": {
+    "logistic_regression": {
+      "roc_auc_mean": 0.6868075702,
+      "roc_auc_std": 0.0689735031,
+      "average_precision_mean": 0.1566817514,
+      "average_precision_std": 0.0928439644,
+      "recall_mean": 0.552,
+      "recall_std": 0.2121224136,
+      "false_positive_rate_mean": 0.3827008547,
+      "false_positive_rate_std": 0.0574363769
+    },
+    "random_forest": {
+      "roc_auc_mean": 0.6776437118,
+      "roc_auc_std": 0.0820221089,
+      "average_precision_mean": 0.1155484008,
+      "average_precision_std": 0.070009727,
+      "recall_mean": 0.0,
+      "recall_std": 0.0,
+      "false_positive_rate_mean": 0.0017680098,
+      "false_positive_rate_std": 0.0056447708
+    },
+    "hist_gradient_boosting": {
+      "roc_auc_mean": 0.7035115995,
+      "roc_auc_std": 0.0950325815,
+      "average_precision_mean": 0.1535617146,
+      "average_precision_std": 0.1115139468,
+      "recall_mean": 0.17,
+      "recall_std": 0.1916629695,
+      "false_positive_rate_mean": 0.0913333333,
+      "false_positive_rate_std": 0.0316742286
+    },
+    "baseline_point_proxy": {
+      "roc_auc_mean": 0.5606556777,
+      "roc_auc_std": 0.1016272176,
+      "average_precision_mean": 0.0631233085,
+      "average_precision_std": 0.0154572826,
+      "recall_mean": 0.496,
+      "recall_std": 0.1953124133,
+      "false_positive_rate_mean": 0.3746886447,
+      "false_positive_rate_std": 0.0507450502
+    },
+    "baseline_max_500m": {
+      "roc_auc_mean": 0.6807326007,
+      "roc_auc_std": 0.0757228586,
+      "average_precision_mean": 0.1040249961,
+      "average_precision_std": 0.0270968214,
+      "recall_mean": 0.374,
+      "recall_std": 0.1885064823,
+      "false_positive_rate_mean": 0.2172796093,
+      "false_positive_rate_std": 0.0428164216
+    },
+    "logistic_regression+latlon": {
+      "roc_auc_mean": 0.7255599512,
+      "roc_auc_std": 0.0751438999,
+      "average_precision_mean": 0.2273275269,
+      "average_precision_std": 0.118643585,
+      "recall_mean": 0.562,
+      "recall_std": 0.2174903235,
+      "false_positive_rate_mean": 0.3376971917,
+      "false_positive_rate_std": 0.053719267
+    },
+    "random_forest+latlon": {
+      "roc_auc_mean": 0.8489021978,
+      "roc_auc_std": 0.0753749801,
+      "average_precision_mean": 0.3256045956,
+      "average_precision_std": 0.1457824454,
+      "recall_mean": 0.02,
+      "recall_std": 0.0606091527,
+      "false_positive_rate_mean": 0.0046446886,
+      "false_positive_rate_std": 0.0077585294
+    },
+    "hist_gradient_boosting+latlon": {
+      "roc_auc_mean": 0.85014884,
+      "roc_auc_std": 0.0968798636,
+      "average_precision_mean": 0.4500483098,
+      "average_precision_std": 0.1885034898,
+      "recall_mean": 0.498,
+      "recall_std": 0.2498897716,
+      "false_positive_rate_mean": 0.0516483516,
+      "false_positive_rate_std": 0.0234419256
+    }
+  },
+  "hotspot_level": {
+    "baseline_recall": 0.5,
+    "baseline_false_positive_rate": 0.37472283813747226,
+    "ml_recall_loo": 0.5416666666666666,
+    "ml_false_positive_rate_loo": 0.4146341463414634,
+    "ml_roc_auc_loo": 0.6698078344419808,
+    "ml_average_precision_loo": 0.12053070999703258,
+    "baseline_roc_auc_point_score": 0.563839615668884,
+    "baseline_roc_auc_max_500m": 0.6795084996304509,
+    "ml_recall_at_baseline_fpr_loo": 0.4583333333333333,
+    "max500_recall_at_baseline_fpr": 0.7083333333333334,
+    "ml_recall_at_10pct_fpr_loo": 0.125,
+    "max500_recall_at_10pct_fpr": 0.125,
+    "hotspots_recovered_by_ml_missed_by_baseline": [
+      "Donholm",
+      "Madaraka",
+      "Lang'ata",
+      "Kileleshwa",
+      "Kibera"
+    ],
+    "hotspots_lost_by_ml_flagged_by_baseline": [
+      "Kiambiu",
+      "Kayole",
+      "Nairobi West",
+      "Chiromo"
+    ],
+    "hotspots_missed_by_both": [
+      "Fedha",
+      "Kawangware",
+      "Kangemi",
+      "Lavington",
+      "Westlands",
+      "Parklands",
+      "Kitisuru"
+    ]
+  },
+  "training_set": {
+    "positives": 24,
+    "background": 451,
+    "features": [
+      "s_point",
+      "s_max_150",
+      "s_mean_150",
+      "frac_wet_150",
+      "s_max_300",
+      "s_mean_300",
+      "frac_wet_300",
+      "s_max_500",
+      "s_mean_500",
+      "frac_wet_500",
+      "s_max_1000",
+      "s_mean_1000",
+      "frac_wet_1000",
+      "dist_wet_m",
+      "dist_strong_m"
+    ]
+  },
+  "s_hotspot_reference": 0.4202457219362259,
+  "tier_thresholds": {
+    "common": 0.0,
+    "occasional": 0.08622949317871995,
+    "moderate": 0.17287973298521997,
+    "severe": 0.2804830283279429,
+    "extreme": 0.37416693319847455
+  },
+  "representative_depths_m": {
+    "RP5": 0.0,
+    "RP10": 0.0,
+    "RP25": 0.3539289026873731,
+    "RP100": 0.7005298619133732,
+    "RP250": 1.045447834628253
+  },
+  "typical_exposed_building_susceptibility": 0.26136195865706324
+}

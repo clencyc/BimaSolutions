@@ -1,0 +1,56 @@
+{
+  "total_exposure_kes": 63635075000.0,
+  "n_buildings": 600,
+  "portfolio_aal_kes": {
+    "baseline_proxy": 272113879.7404136,
+    "proxy_plus_hotspots": 345511384.2947666,
+    "ml_augmented": 607333848.4436202
+  },
+  "loss_by_return_period_kes": {
+    "RP5": {
+      "return_period_years": 5,
+      "baseline_proxy": 380527462.7537023,
+      "proxy_plus_hotspots": 410044533.12999594,
+      "ml_augmented": 410047888.0214894
+    },
+    "RP10": {
+      "return_period_years": 10,
+      "baseline_proxy": 739364948.6221801,
+      "proxy_plus_hotspots": 966660240.2702663,
+      "ml_augmented": 1385414320.2664878
+    },
+    "RP25": {
+      "return_period_years": 25,
+      "baseline_proxy": 1952414092.3333318,
+      "proxy_plus_hotspots": 2583183260.9829803,
+      "ml_augmented": 5185775486.051772
+    },
+    "RP100": {
+      "return_period_years": 100,
+      "baseline_proxy": 3581174287.4316425,
+      "proxy_plus_hotspots": 4462283698.732425,
+      "ml_augmented": 8746736944.128275
+    },
+    "RP250": {
+      "return_period_years": 250,
+      "baseline_proxy": 5945505626.31208,
+      "proxy_plus_hotspots": 7301712156.461102,
+      "ml_augmented": 12171020936.36973
+    }
+  },
+  "buildings_with_hazard": {
+    "baseline_proxy": 259,
+    "ml_augmented": 398
+  },
+  "hazard_source_counts": {
+    "ml_model": 237,
+    "none": 202,
+    "proxy": 117,
+    "known_hotspot": 44
+  },
+  "confidence_counts": {
+    "medium": 329,
+    "low": 233,
+    "high": 38
+  }
+}
