@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Drainage Reports{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Drainage Reports</p>
+    <h1>Drainage and flood-mechanism findings</h1>
+  </div>
+</section>
+
+<div class="toolbar inline-toolbar">
+  <label>
+    <span>Neighbourhood</span>
+    <select id="neighbourhoodFilter">
+      {% for neighbourhood in neighbourhoods %}
+      <option value="{{ neighbourhood }}">{{ neighbourhood }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>
+    <span>Date</span>
+    <input id="dateFilter" type="date">
+  </label>
+  <label>
+    <span>Search</span>
+    <input id="reportSearch" type="search" placeholder="Search report or finding">
+  </label>
+</div>
+
+<div class="report-list">
+  {% for report in reports %}
+  <article class="report-card" data-neighbourhood="{{ report.neighbourhood }}" data-date="{{ report.date }}">
+    <div class="report-meta">
+      <span class="badge badge-ai">AI-GENERATED</span>
+      {% if report.sample_label %}
+      <span class="badge badge-sample">SAMPLE DATA</span>
+      {% endif %}
+    </div>
+    <h2>{{ report.title }}</h2>
+    <div class="report-details">
+      <span>Source: {{ report.source }}</span>
+      <span>Date: {{ report.date }}</span>
+      <span>Neighbourhood: {{ report.neighbourhood }}</span>
+    </div>
+    <ul>
+      {% for finding in report.findings %}
+      <li>{{ finding }}</li>
+      {% endfor %}
+    </ul>
+    <a href="{{ report.link }}" target="_blank" rel="noreferrer">Open source</a>
+  </article>
+  {% endfor %}
+</div>
+
+<div class="panel note-panel">
+  <p><strong>AI extraction note:</strong> {{ note }}</p>
+  <p>This sample report is modelled on the 2024 “Diagnostic of Urban Flooding in Nairobi” background report and is clearly labelled SAMPLE DATA until the backend provides verified extractions.</p>
+</div>
+{% endblock %}

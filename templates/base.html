@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Nairobi Urban Flood Risk Dashboard{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% if request.path != '/login' %}
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-box">
+        <div class="brand-mark">N</div>
+        <div>
+          <strong>Nairobi Flood Risk</strong>
+          <small>CAT dashboard</small>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Sidebar navigation">
+        <a href="{{ url_for('overview') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">Overview</a>
+        <a href="{{ url_for('ep_curve') }}" class="nav-link {% if request.path == '/ep-curve' %}active{% endif %}">EP Curve</a>
+        <a href="{{ url_for('hotspots') }}" class="nav-link {% if request.path == '/hotspots' %}active{% endif %}">Hotspots</a>
+        <a href="{{ url_for('drainage_reports') }}" class="nav-link {% if request.path == '/drainage-reports' %}active{% endif %}">Drainage Reports</a>
+        <a href="{{ url_for('reports_generate') }}" class="nav-link {% if request.path == '/reports/generate' %}active{% endif %}">Generate Report</a>
+        <a href="{{ url_for('about') }}" class="nav-link {% if request.path == '/about' %}active{% endif %}">Methodology &amp; Limits</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-box">
+          <span class="muted-label">USER</span>
+          <strong>{{ current_user.email if current_user else 'Guest' }}</strong>
+        </div>
+        <form method="post" action="{{ url_for('logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="logout-button">Logout</button>
+        </form>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+        <div class="badge-list" aria-label="Data labels">
+          <span class="badge badge-real">REAL DATA</span>
+          <span class="badge badge-synthetic">SYNTHETIC</span>
+          <span class="badge badge-assumption">ASSUMPTION</span>
+          <span class="badge badge-ai">AI-GENERATED</span>
+        </div>
+      </header>
+      {% if mock_mode %}
+      <div class="banner warning-banner" role="status">
+        SAMPLE DATA — model outputs are illustrative only and must not be interpreted as actual observed flood losses.
+      </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% else %}
+    {% block logincontent %}{% endblock %}
+  {% endif %}
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

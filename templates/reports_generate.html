@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Report{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Generate Report</p>
+    <h1>Build a risk briefing</h1>
+  </div>
+</section>
+
+<div class="content-grid two-col">
+  <section class="panel">
+    <h2>Report settings</h2>
+    <form method="post" class="report-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>
+        <span>Report title</span>
+        <input type="text" name="title" value="Nairobi pluvial risk summary" required>
+      </label>
+      <label>
+        <span>Audience</span>
+        <select name="audience">
+          <option value="underwriter">Underwriter</option>
+          <option value="portfolio manager">Portfolio Manager</option>
+          <option value="county/disaster body">County/Disaster Body</option>
+          <option value="broker/cedant">Broker/Cedant</option>
+        </select>
+      </label>
+
+      <fieldset>
+        <legend>Return periods</legend>
+        <label><input type="checkbox" name="return_periods" value="10" checked> 10-year</label>
+        <label><input type="checkbox" name="return_periods" value="25" checked> 25-year</label>
+        <label><input type="checkbox" name="return_periods" value="50" checked> 50-year</label>
+        <label><input type="checkbox" name="return_periods" value="100" checked> 100-year</label>
+        <label><input type="checkbox" name="return_periods" value="250" checked> 250-year</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Sections</legend>
+        <label><input type="checkbox" name="sections" value="EP curve" checked> EP curve</label>
+        <label><input type="checkbox" name="sections" value="class breakdown" checked> Class breakdown</label>
+        <label><input type="checkbox" name="sections" value="hotspots" checked> Hotspots</label>
+        <label><input type="checkbox" name="sections" value="drainage insights" checked> Drainage insights</label>
+        <label><input type="checkbox" name="sections" value="AI briefing" checked> AI briefing</label>
+        <label><input type="checkbox" name="sections" value="assumptions and limitations" checked> Assumptions and limitations</label>
+      </fieldset>
+
+      <label>
+        <span>Format</span>
+        <select name="format">
+          <option value="html">HTML preview</option>
+          <option value="pdf">PDF download</option>
+        </select>
+      </label>
+
+      <button type="submit" class="primary-button">Generate report</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>AI-written briefing</h2>
+    {% if generated_report %}
+      {% if generated_report.status == 'error' %}
+      <div class="alert-box error-box">{{ generated_report.briefing }}</div>
+      {% else %}
+      <div class="briefing-box">
+        <p>{{ generated_report.briefing }}</p>
+      </div>
+      <div class="report-actions">
+        <a href="{{ generated_report.download_url }}" class="primary-button secondary">Download</a>
+      </div>
+      {% endif %}
+    {% else %}
+      <div class="briefing-box placeholder-box">The generated briefing will appear here.</div>
+    {% endif %}
+  </section>
+</div>
+
+<section class="panel">
+  <h2>Previously generated reports</h2>
+  <ul class="report-history">
+    {% for report in previous_reports %}
+    <li>
+      <span>{{ report.date }}</span>
+      <strong>{{ report.title }}</strong>
+      <a href="{{ report.download_url }}">Download</a>
+    </li>
+    {% else %}
+    <li>No previous reports available.</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="panel">
+  <h2>AI insights</h2>
+  <ul>
+    {% for insight in insights %}
+      <li><strong>{{ insight.title }}</strong> — {{ insight.detail }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

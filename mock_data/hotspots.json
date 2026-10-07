@@ -1,0 +1,209 @@
+{
+  "hotspots": [
+    {
+      "name": "Kibera",
+      "lat": -1.313,
+      "lon": 36.783,
+      "flagged": true,
+      "ai_reason": "drainage capacity",
+      "risk_score": 0.82
+    },
+    {
+      "name": "Mathare Valley",
+      "lat": -1.262,
+      "lon": 36.85,
+      "flagged": true,
+      "ai_reason": "stormwater runoff",
+      "risk_score": 0.77
+    },
+    {
+      "name": "Mukuru Kwa Njenga",
+      "lat": -1.292,
+      "lon": 36.883,
+      "flagged": true,
+      "ai_reason": "blocked culverts",
+      "risk_score": 0.79
+    },
+    {
+      "name": "Kawangware",
+      "lat": -1.281,
+      "lon": 36.759,
+      "flagged": false,
+      "ai_reason": "low-lying terrain",
+      "risk_score": 0.63
+    },
+    {
+      "name": "Dagoretti Corner",
+      "lat": -1.269,
+      "lon": 36.762,
+      "flagged": false,
+      "ai_reason": "river proximity",
+      "risk_score": 0.57
+    },
+    {
+      "name": "Eastleigh North",
+      "lat": -1.27,
+      "lon": 36.853,
+      "flagged": true,
+      "ai_reason": "drainage capacity",
+      "risk_score": 0.69
+    },
+    {
+      "name": "Korogocho",
+      "lat": -1.25,
+      "lon": 36.84,
+      "flagged": true,
+      "ai_reason": "informal settlement encroachment",
+      "risk_score": 0.87
+    },
+    {
+      "name": "Ngara",
+      "lat": -1.284,
+      "lon": 36.823,
+      "flagged": false,
+      "ai_reason": "terrain depression",
+      "risk_score": 0.61
+    },
+    {
+      "name": "Babadogo",
+      "lat": -1.21,
+      "lon": 36.895,
+      "flagged": true,
+      "ai_reason": "river confluence",
+      "risk_score": 0.75
+    },
+    {
+      "name": "Ruaraka",
+      "lat": -1.226,
+      "lon": 36.88,
+      "flagged": true,
+      "ai_reason": "stormwater channels",
+      "risk_score": 0.71
+    },
+    {
+      "name": "Kasarani",
+      "lat": -1.216,
+      "lon": 36.897,
+      "flagged": false,
+      "ai_reason": "drainage flow obstruction",
+      "risk_score": 0.64
+    },
+    {
+      "name": "Mwiki",
+      "lat": -1.229,
+      "lon": 36.914,
+      "flagged": false,
+      "ai_reason": "terrain and river interaction",
+      "risk_score": 0.55
+    },
+    {
+      "name": "Kayole",
+      "lat": -1.27,
+      "lon": 36.92,
+      "flagged": true,
+      "ai_reason": "blocked drains",
+      "risk_score": 0.73
+    },
+    {
+      "name": "Dandora",
+      "lat": -1.265,
+      "lon": 36.876,
+      "flagged": true,
+      "ai_reason": "drainage capacity",
+      "risk_score": 0.81
+    },
+    {
+      "name": "Nairobi West",
+      "lat": -1.311,
+      "lon": 36.825,
+      "flagged": false,
+      "ai_reason": "urban runoff accumulation",
+      "risk_score": 0.6
+    },
+    {
+      "name": "Kibra",
+      "lat": -1.32,
+      "lon": 36.787,
+      "flagged": false,
+      "ai_reason": "low-lying ground",
+      "risk_score": 0.66
+    },
+    {
+      "name": "Donholm",
+      "lat": -1.298,
+      "lon": 36.895,
+      "flagged": true,
+      "ai_reason": "surface water storage",
+      "risk_score": 0.74
+    },
+    {
+      "name": "Huruma",
+      "lat": -1.272,
+      "lon": 36.847,
+      "flagged": true,
+      "ai_reason": "blocked culverts",
+      "risk_score": 0.8
+    },
+    {
+      "name": "South B",
+      "lat": -1.317,
+      "lon": 36.828,
+      "flagged": false,
+      "ai_reason": "channel conveyance",
+      "risk_score": 0.59
+    },
+    {
+      "name": "South C",
+      "lat": -1.323,
+      "lon": 36.842,
+      "flagged": false,
+      "ai_reason": "slope and runoff",
+      "risk_score": 0.58
+    },
+    {
+      "name": "Embakasi",
+      "lat": -1.338,
+      "lon": 36.907,
+      "flagged": true,
+      "ai_reason": "undersized drains",
+      "risk_score": 0.76
+    },
+    {
+      "name": "Mlolongo",
+      "lat": -1.354,
+      "lon": 36.92,
+      "flagged": false,
+      "ai_reason": "riverside flood path",
+      "risk_score": 0.52
+    },
+    {
+      "name": "Utawala",
+      "lat": -1.297,
+      "lon": 36.931,
+      "flagged": true,
+      "ai_reason": "stormwater backlog",
+      "risk_score": 0.72
+    },
+    {
+      "name": "Githurai",
+      "lat": -1.197,
+      "lon": 36.934,
+      "flagged": false,
+      "ai_reason": "terrain depression",
+      "risk_score": 0.54
+    },
+    {
+      "name": "Ruai",
+      "lat": -1.256,
+      "lon": 36.957,
+      "flagged": true,
+      "ai_reason": "river overflow risk",
+      "risk_score": 0.78
+    }
+  ],
+  "legend": {
+    "flagged": "green",
+    "missed": "red"
+  },
+  "validation_note": "PROXY NOTE: the hazard proxy uses terrain and rivers only and cannot see blocked drains or stormwater capacity."
+}

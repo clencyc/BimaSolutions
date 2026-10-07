@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Methodology & Limitations{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Methodology &amp; Limitations</p>
+    <h1>Data sources, assumptions, and honest caveats</h1>
+  </div>
+</section>
+
+<div class="panel">
+  <h2>Key caveats</h2>
+  <ul class="check-list">
+    <li>The exposure portfolio is SYNTHETIC and comprises 600 invented buildings with total insured value KES 6,363,470,000; it is not real client data.</li>
+    <li>The hazard layer is a PROXY using terrain elevation and OpenStreetMap river networks only. It is not measured flood depth and not a calibrated hydrological or hydraulic model.</li>
+    <li>No public Kenya-specific depth-damage curves exist, so the vulnerability function is adapted from JRC/Huizinga curves and parameterised by the backend.</li>
+    <li>Only 12 of 24 government-named hotspots are flagged by the hazard proxy, which is a known limitation and highlights the value of AI drainage signals.</li>
+    <li>Reinsurance treaty structuring, detailed underwriting terms, and policy-specific claims mechanics are out of scope for this prototype.</li>
+  </ul>
+</div>
+
+<div class="content-grid two-col">
+  <section class="panel">
+    <h2>Data sources</h2>
+    <ul>
+      <li>OpenStreetMap terrain and river network for the national hazard proxy.</li>
+      <li>Government hotspot names from Nairobi flood-prone area references.</li>
+      <li>AI-extracted drainage findings modelled on public flood-diagnostic material and synthetic summarisation.</li>
+      <li>Public JRC/Huizinga vulnerability curves for adapted damage functions.</li>
+    </ul>
+  </section>
+  <section class="panel">
+    <h2>Assumptions</h2>
+    <ul>
+      <li>Return-period mapping: extreme=10, severe=25, moderate=50, occasional=100, common=250 years.</li>
+      <li>Portfolio damage is estimated using the synthetic exposure mix and an adapted vulnerability function.</li>
+      <li>AI-extracted drainage findings enhance the hazard layer, but they should not replace measured hydrological evidence.</li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "rpt-1001",
+      "title": "Portfolio flood briefing",
+      "date": "2026-09-12",
+      "download_url": "/reports/rpt-1001/download"
+    },
+    {
+      "id": "rpt-1002",
+      "title": "County disaster risk summary",
+      "date": "2026-09-05",
+      "download_url": "/reports/rpt-1002/download"
+    }
+  ],
+  "generated": {
+    "report_id": "rpt-1003",
+    "status": "completed",
+    "title": "Nairobi pluvial flood overview",
+    "audience": "portfolio manager",
+    "briefing": "The synthetic exposure portfolio shows the highest concentrations of flood loss in low-lying and drainage-constrained informal settlements, especially around Kibera, Mathare, and Mukuru. The hazard proxy underestimates some river-adjacent and drainage-blocked hotspots, so the report should be treated as decision support rather than a calibrated hydrological model.",
+    "content_html": "<h2>Risk briefing</h2><p>Fluvial and surface-water vulnerability is concentrated where drainage and terrain combine to increase flood propensity.</p>",
+    "download_url": "/reports/rpt-1003/download"
+  }
+}

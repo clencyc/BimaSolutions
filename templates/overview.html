@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Overview{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Overview</p>
+    <h1>Urban flood risk snapshot</h1>
+  </div>
+</section>
+
+<div class="intro-card">
+  <p>
+    This dashboard translates a flood catastrophe model into a fast, plain-English view for underwriters,
+    portfolio managers, and county stakeholders. It makes the core risk story legible in under two minutes,
+    with results framed as a synthetic portfolio analysis supported by a hazard proxy and AI-assisted drainage signals.
+  </p>
+</div>
+
+<div class="kpi-grid">
+  <article class="kpi-card">
+    <span class="kpi-label">Total exposure</span>
+    <strong>{{ '{:,.0f}'.format(summary.total_exposure) }} KES</strong>
+    <small>SYNTHETIC portfolio total</small>
+  </article>
+  <article class="kpi-card">
+    <span class="kpi-label">Buildings</span>
+    <strong>{{ summary.building_count }}</strong>
+    <small>Invented building count</small>
+  </article>
+  <article class="kpi-card">
+    <span class="kpi-label">Loss at 10-year</span>
+    <strong>{{ '{:,.0f}'.format(summary.losses.get('10', 0)) }} KES</strong>
+    <small>Representative annual return-period loss</small>
+  </article>
+  <article class="kpi-card">
+    <span class="kpi-label">Loss at 25-year</span>
+    <strong>{{ '{:,.0f}'.format(summary.losses.get('25', 0)) }} KES</strong>
+  </article>
+  <article class="kpi-card">
+    <span class="kpi-label">Loss at 50-year</span>
+    <strong>{{ '{:,.0f}'.format(summary.losses.get('50', 0)) }} KES</strong>
+  </article>
+  <article class="kpi-card">
+    <span class="kpi-label">Loss at 100-year</span>
+    <strong>{{ '{:,.0f}'.format(summary.losses.get('100', 0)) }} KES</strong>
+  </article>
+  <article class="kpi-card">
+    <span class="kpi-label">Loss at 250-year</span>
+    <strong>{{ '{:,.0f}'.format(summary.losses.get('250', 0)) }} KES</strong>
+  </article>
+  <article class="kpi-card">
+    <span class="kpi-label">Flood hotspots</span>
+    <strong>{{ summary.flood_hotspots }}</strong>
+    <small>{{ summary.hotspots_flagged or 0 }} flagged by proxy</small>
+  </article>
+</div>
+
+<div class="content-grid two-col">
+  <section class="panel">
+    <h2>Loss curve preview</h2>
+    <canvas id="overviewCurveChart" data-chart='{{ summary.ep_preview | tojson }}'></canvas>
+  </section>
+  <section class="panel">
+    <h2>Data transparency</h2>
+    <ul class="check-list">
+      <li><strong>Portfolio:</strong> SYNTHETIC — 600 invented buildings, total insured value KES 6,363,470,000.</li>
+      <li><strong>Hazard layer:</strong> PROXY — susceptibility score 0 to 1 from elevation and OpenStreetMap rivers. Not a calibrated flood model.</li>
+      <li><strong>Vulnerability:</strong> adapted from public JRC/Huizinga curves because no Kenya-specific depth-damage curves are available.</li>
+      <li><strong>Reporting:</strong> all numbers in this sample are illustrative and clearly labelled as SAMPLE DATA when MOCK_MODE is enabled.</li>
+    </ul>
+  </section>
+</div>
+{% endblock %}
