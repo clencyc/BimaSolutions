@@ -19,6 +19,76 @@ from . import config
 from .hazard import depth_from_susceptibility, severity_from_susceptibility
 from .vulnerability import damage_ratio
 
+
+# --------------------------------------------------------------------------- #
+# Formula functions (every calculation used by the engine lives here)
+# --------------------------------------------------------------------------- #
+
+def loss_from_damage(damage_ratio, insured_value):
+    """Ground-up loss = damage ratio x insured value (challenge document, Step 4)."""
+    return np.asarray(damage_ratio, float) * np.asarray(insured_value, float)
+
+
+def loss_rate(loss, insured_value):
+    """Loss as a fraction of insured value (e.g. AAL rate); zero where value is zero."""
+    v = np.asarray(insured_value, float)
+    return np.divide(np.asarray(loss, float), v, out=np.zeros_like(v, dtype=float), where=v > 0)
+
+
+def share_of_total(values):
+    """Each value's share of the sum (used for contribution to portfolio AAL)."""
+    v = np.asarray(values, float)
+    return v / max(v.sum(), 1e-12)
+
+
+def exceedance_probability(return_period_years):
+    """Annual exceedance probability = 1 / return period."""
+    return 1.0 / np.asarray(return_period_years, float)
+
+
+def ep_aal(ep: pd.DataFrame) -> float:
+    """Portfolio AAL from an EP-curve table (columns portfolio_loss_kes, exceedance_probability)."""
+    return float(average_annual_loss(ep["portfolio_loss_kes"].values, ep["exceedance_probability"].values))
+
+
+def loss_at_return_period(ep: pd.DataFrame, return_period_years: int) -> float:
+    """Portfolio loss at one return period from an EP-curve table."""
+    return float(ep.loc[ep["return_period_years"] == return_period_years, "portfolio_loss_kes"].iloc[0])
+
+
+def annual_flood_probability(depths, exceedance_probs):
+    """Annual probability of any flooding: EP of the most frequent scenario with depth > 0.
+
+    ``depths`` is ``[n_buildings, n_scenarios]`` aligned with ``exceedance_probs``.
+    """
+    flooded = np.asarray(depths, float) > 0
+    p = np.asarray(exceedance_probs, float)
+    return np.where(flooded.any(axis=1), (flooded * p).max(axis=1), 0.0)
+
+
+def percentile_risk_score(rates) -> np.ndarray:
+    """Risk score 0-100 = percentile rank of the loss rate; buildings with zero rate score 0."""
+    rates = np.asarray(rates, float)
+    pct = pd.Series(rates).rank(pct=True, method="average").values * 100.0
+    pct[rates <= 0] = 0.0
+    return np.round(pct, 1)
+
+
+def threshold_sensitivity(exposure: pd.DataFrame, s_proxy, ml_likelihood, hotspot_kernel,
+                          s_reference: float, scenarios: pd.DataFrame,
+                          thresholds=(0.5, 0.6, 0.7, 0.8, 1.01)) -> pd.DataFrame:
+    """Re-run the engine for several ML flag thresholds (>1 switches the ML uplift off)."""
+    from .hazard import augment_susceptibility
+    rows = []
+    for thr in thresholds:
+        s_aug, _ = augment_susceptibility(s_proxy, ml_likelihood, hotspot_kernel, s_reference, ml_threshold=thr)
+        ep = ep_curve(scenario_losses(exposure, s_aug, scenarios))
+        rows.append({"ml_flag_threshold": thr if thr <= 1 else "ML off",
+                     "buildings_with_hazard": int((s_aug > 0).sum()),
+                     "AAL_kes": ep_aal(ep), "RP100_loss_kes": loss_at_return_period(ep, 100)})
+    return pd.DataFrame(rows)
+
+
 LONG_COLUMNS = [
     "building_id", "scenario", "return_period_years", "exceedance_probability",
     "hazard_severity", "flood_depth_m", "damage_ratio", "loss_kes",
@@ -44,7 +114,7 @@ def scenario_losses(exposure: pd.DataFrame, susceptibility, scenarios: pd.DataFr
             "hazard_severity": severity_from_susceptibility(s, t),
             "flood_depth_m": depth,
             "damage_ratio": dr,
-            "loss_kes": dr * exposure["tiv_kes"].values,
+            "loss_kes": loss_from_damage(dr, exposure["tiv_kes"].values),
         }))
     return pd.concat(frames, ignore_index=True)[LONG_COLUMNS]
 
@@ -89,16 +159,14 @@ def building_summary(exposure: pd.DataFrame, long: pd.DataFrame) -> pd.DataFrame
     wide, depth = wide[scen_order], depth[scen_order]
     aal = average_annual_loss(wide.values, probs[scen_order].values)
     # annual probability of being flooded at all = EP of the most frequent scenario with depth > 0
-    flooded = depth.values > 0
-    p_arr = probs[scen_order].values
-    annual_flood_prob = np.where(flooded.any(axis=1), (flooded * p_arr).max(axis=1), 0.0)
+    annual_flood_prob = annual_flood_probability(depth.values, probs[scen_order].values)
 
     out = exposure.set_index("building_id")[["latitude", "longitude", "housing_class", "tiv_kes"]].copy()
     for sc in scen_order:
         out[f"loss_{sc}_kes"] = wide[sc]
         out[f"depth_{sc}_m"] = depth[sc]
     out["expected_annual_loss_kes"] = aal
-    out["aal_rate"] = out["expected_annual_loss_kes"] / out["tiv_kes"]
+    out["aal_rate"] = loss_rate(out["expected_annual_loss_kes"], out["tiv_kes"])
     out["annual_flood_probability"] = annual_flood_prob
     return out.reset_index()
 
@@ -106,13 +174,10 @@ def building_summary(exposure: pd.DataFrame, long: pd.DataFrame) -> pd.DataFrame
 def rank_buildings(summary: pd.DataFrame) -> pd.DataFrame:
     """Add risk score (percentile rank of AAL rate), risk class and loss rank."""
     out = summary.copy()
-    rate = out["aal_rate"].values
-    pct = pd.Series(rate).rank(pct=True, method="average").values * 100.0
-    pct[rate <= 0] = 0.0                       # no modelled hazard -> score 0
-    out["risk_score"] = np.round(pct, 1)
+    out["risk_score"] = percentile_risk_score(out["aal_rate"].values)
     out["risk_class"] = [_band(v) for v in out["risk_score"].values]
     out["rank_by_expected_loss"] = out["expected_annual_loss_kes"].rank(ascending=False, method="min").astype(int)
-    out["share_of_portfolio_aal"] = out["expected_annual_loss_kes"] / max(out["expected_annual_loss_kes"].sum(), 1e-12)
+    out["share_of_portfolio_aal"] = share_of_total(out["expected_annual_loss_kes"])
     return out.sort_values("rank_by_expected_loss").reset_index(drop=True)
 
 
@@ -136,7 +201,7 @@ def loss_by_housing_class(exposure: pd.DataFrame, long: pd.DataFrame) -> pd.Data
     wide["expected_annual_loss_kes"] = average_annual_loss(wide.values, probs[order].values)
     tiv = exposure.groupby("housing_class")["tiv_kes"].sum()
     wide.insert(0, "total_tiv_kes", tiv)
-    wide["aal_rate"] = wide["expected_annual_loss_kes"] / wide["total_tiv_kes"]
+    wide["aal_rate"] = loss_rate(wide["expected_annual_loss_kes"], wide["total_tiv_kes"])
     return wide.reset_index()
 
 

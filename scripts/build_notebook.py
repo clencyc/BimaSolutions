@@ -88,24 +88,16 @@ Three nested hazard layers through the same engine: proxy only → + known hotsp
 code("""
 display(res["scenarios"])
 plots.ep_curves(res["ep_baseline"], res["ep_hotspots"], res["ep_augmented"], res["ep_naive_mapping"]);
-aal = {k: risk.average_annual_loss(e.portfolio_loss_kes.values, e.exceedance_probability.values)
-       for k, e in [("baseline_proxy", res["ep_baseline"]), ("proxy_plus_hotspots", res["ep_hotspots"]), ("ml_augmented", res["ep_augmented"])]}
-display(pd.DataFrame({"AAL (KES)": aal, "AAL rate": {k: v / expo.total_exposure(exposure) for k, v in aal.items()}}))
+aal = {k: risk.ep_aal(e) for k, e in [("baseline_proxy", res["ep_baseline"]), ("proxy_plus_hotspots", res["ep_hotspots"]), ("ml_augmented", res["ep_augmented"])]}
+display(pd.DataFrame({"AAL (KES)": aal, "AAL rate": {k: float(risk.loss_rate(v, expo.total_exposure(exposure))) for k, v in aal.items()}}))
 display(res["loss_by_class"].round(0))
 plots.loss_by_scenario_and_class(res["loss_by_class"], list(res["scenarios"].scenario));
 """)
 code("""
 # Sensitivity of the result to the ML flag threshold
-s_proxy = exposure[config.HAZARD_COLUMNS["common"]].values
 sm = summary.set_index("building_id").loc[exposure.building_id]
-rows = []
-for thr in [0.5, 0.6, 0.7, 0.8, 1.01]:
-    s_aug, _ = hazard.augment_susceptibility(s_proxy, sm.ml_hotspot_likelihood.values, sm.hotspot_proximity.values, res["s_reference"], ml_threshold=thr)
-    e = risk.ep_curve(risk.scenario_losses(exposure, s_aug, res["scenarios"]))
-    rows.append({"ml_flag_threshold": thr if thr <= 1 else "ML off", "buildings_with_hazard": int((s_aug > 0).sum()),
-                 "AAL_kes": risk.average_annual_loss(e.portfolio_loss_kes.values, e.exceedance_probability.values),
-                 "RP100_loss_kes": float(e.loc[e.return_period_years == 100, "portfolio_loss_kes"].iloc[0])})
-pd.DataFrame(rows)
+risk.threshold_sensitivity(exposure, exposure[config.HAZARD_COLUMNS["common"]].values, sm.ml_hotspot_likelihood.values,
+                           sm.hotspot_proximity.values, res["s_reference"], res["scenarios"])
 """)
 
 md("""
@@ -135,7 +127,7 @@ for _, r in top.iterrows():
 
 md("## 8. Baseline vs ML-augmented")
 code("""
-def rp(ep, n): return float(ep.loc[ep.return_period_years == n, "portfolio_loss_kes"].iloc[0])
+rp = risk.loss_at_return_period
 cmp = pd.DataFrame({
     "baseline (proxy only)": {"hotspots flagged (of 24)": int(hv.baseline_flagged.sum()), "hotspot ROC-AUC": hm["baseline_roc_auc_point_score"],
         "buildings with hazard": int((summary.proxy_susceptibility > 0).sum()), "AAL (KES)": aal["baseline_proxy"],

@@ -158,8 +158,8 @@ def run_pipeline(data_dir: Path = config.DATA_DIR, n_boot: int = 100,
     # ---- 7. agent-facing long table --------------------------------------- #
     predictions = _build_predictions(exposure, summary, long_aug, long_base)
 
-    log(f"[done] {time.time() - t0:.1f}s; portfolio AAL baseline KES {ep_base.pipe(_aal):,.0f} -> "
-        f"augmented KES {ep_aug.pipe(_aal):,.0f}")
+    log(f"[done] {time.time() - t0:.1f}s; portfolio AAL baseline KES {risk.ep_aal(ep_base):,.0f} -> "
+        f"augmented KES {risk.ep_aal(ep_aug):,.0f}")
     return {
         "exposure": exposure, "hotspots": hotspots, "rasters": rasters, "thresholds": thresholds,
         "scenarios": scenarios, "feature_rasters": fr, "X": X, "y": y, "meta": meta, "X_buildings": X_bld,
@@ -174,10 +174,6 @@ def run_pipeline(data_dir: Path = config.DATA_DIR, n_boot: int = 100,
         "vulnerability_matrix": vmatrix, "representative_depths": rep_depth, "s_typical": s_typical,
         "predictions": predictions,
     }
-
-
-def _aal(ep: pd.DataFrame) -> float:
-    return float(risk.average_annual_loss(ep["portfolio_loss_kes"].values, ep["exceedance_probability"].values))
 
 
 def _build_predictions(exposure, summary, long_aug, long_base) -> pd.DataFrame:
@@ -235,9 +231,9 @@ def write_outputs(res: dict, out_dir: Path = config.OUTPUT_DIR) -> list[Path]:
     portfolio = {
         "total_exposure_kes": total_tiv,
         "n_buildings": int(len(res["exposure"])),
-        "portfolio_aal_kes": {"baseline_proxy": _aal(res["ep_baseline"]),
-                              "proxy_plus_hotspots": _aal(res["ep_hotspots"]),
-                              "ml_augmented": _aal(res["ep_augmented"])},
+        "portfolio_aal_kes": {"baseline_proxy": risk.ep_aal(res["ep_baseline"]),
+                              "proxy_plus_hotspots": risk.ep_aal(res["ep_hotspots"]),
+                              "ml_augmented": risk.ep_aal(res["ep_augmented"])},
         "loss_by_return_period_kes": {
             row.scenario: {"return_period_years": int(row.return_period_years),
                            "baseline_proxy": float(row.baseline_proxy_loss_kes),

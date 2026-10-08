@@ -35,6 +35,11 @@ from sklearn.preprocessing import StandardScaler
 from . import config
 from .data import Raster, nearest_point_distance
 
+
+def exceedance_probability(return_period_years):
+    """Annual exceedance probability = 1 / return period."""
+    return 1.0 / np.asarray(return_period_years, float)
+
 # --------------------------------------------------------------------------- #
 # Tier structure and scenarios
 # --------------------------------------------------------------------------- #
@@ -81,7 +86,7 @@ def scenario_table(thresholds: dict[str, float], mapping: str = "nested") -> pd.
         rows.append({
             "scenario": sc["name"],
             "return_period_years": sc["return_period"],
-            "exceedance_probability": 1.0 / sc["return_period"],
+            "exceedance_probability": float(exceedance_probability(sc["return_period"])),
             "footprint_tier": tier,
             "susceptibility_threshold": t,
             "max_depth_m": config.DEPTH_REFERENCE_M * (1 - t),
