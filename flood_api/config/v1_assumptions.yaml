@@ -1,0 +1,94 @@
+# Flood Catastrophe Model Assumptions v1.0
+# All values are documented, versioned, and referenced in provenance.
+# Changes to this file trigger a new config version and must be tracked in version control.
+
+version: "1.0"
+created_at: "2026-10-08"
+description: "Initial Nairobi pluvial flood model assumptions"
+
+hazard:
+  max_depth_m: 4.0
+  documentation: "Maximum depth in metres; hazard scores are 0-1 susceptibility, depth = score × max_depth_m"
+  source: "expert_assumption"
+  confidence: 0.7
+
+return_periods:
+  common: 2
+  occasional: 10
+  moderate: 50
+  severe: 100
+  extreme: 250
+  documentation: "Return periods in years for each hazard tier"
+  source: "industry_standard"
+  confidence: 0.9
+
+vulnerability:
+  construction_classes:
+    informal_iron_sheet:
+      display_name: "Informal / Iron Sheet"
+      depth_damage_curve:
+        pairs:
+          - [0.0, 0.0]
+          - [0.5, 0.15]
+          - [1.0, 0.3]
+          - [1.5, 0.45]
+          - [2.0, 0.6]
+          - [3.0, 0.75]
+          - [4.0, 0.85]
+          - [5.0, 0.9]
+      documentation: "Adapted from JRC/Huizinga; informal structures with high vulnerability"
+      source: "jrc_huizinga_adapted"
+      confidence: 0.6
+
+    masonry:
+      display_name: "Masonry"
+      depth_damage_curve:
+        pairs:
+          - [0.0, 0.0]
+          - [0.5, 0.08]
+          - [1.0, 0.16]
+          - [1.5, 0.24]
+          - [2.0, 0.35]
+          - [3.0, 0.5]
+          - [4.0, 0.65]
+          - [5.0, 0.75]
+      documentation: "Adapted from JRC/Huizinga; standard residential masonry"
+      source: "jrc_huizinga_adapted"
+      confidence: 0.65
+
+    rcc:
+      display_name: "RCC (Reinforced Concrete)"
+      depth_damage_curve:
+        pairs:
+          - [0.0, 0.0]
+          - [0.5, 0.04]
+          - [1.0, 0.08]
+          - [1.5, 0.12]
+          - [2.0, 0.18]
+          - [3.0, 0.28]
+          - [4.0, 0.38]
+          - [5.0, 0.45]
+      documentation: "Adapted from JRC/Huizinga; reinforced concrete, lower vulnerability"
+      source: "jrc_huizinga_adapted"
+      confidence: 0.7
+
+  damage_cap: 0.9
+  documentation: "Maximum damage ratio (0-1); capped to reflect incomplete loss even under extreme flood"
+  source: "assumption"
+
+adjustments:
+  max_additive: 0.5
+  documentation: "Maximum additive adjustment to hazard score (before capping to 1.0)"
+  source: "assumption"
+
+  multiplicative_range: [0.5, 2.0]
+  documentation: "Allowed range for multiplicative adjustments; result capped at 1.0"
+  source: "assumption"
+
+limitations:
+  - "Hazard layer is an uncalibrated proxy (0-1 susceptibility), not measured depth"
+  - "Portfolio is fully synthetic (test data)"
+  - "No Kenya-specific depth-damage functions available; curves adapted from global research"
+  - "Proxy does not account for drainage-driven flooding; purely pluvial/precipitation-based"
+  - "Building attributes and insured values are synthetic; not validated against real assets"
+  - "No climate-change recurrence updating in baseline model; scenario parameters allow uplift"

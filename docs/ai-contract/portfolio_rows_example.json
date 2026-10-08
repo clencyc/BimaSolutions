@@ -1,0 +1,34 @@
+[
+  {
+    "building_id": "B-NEW-001",
+    "latitude": -1.295,
+    "longitude": 36.808,
+    "neighbourhood": "Kibera",
+    "construction_class": "informal_iron_sheet",
+    "insured_value_ksh": 1500000,
+    "common_hazard": null,
+    "occasional_hazard": null,
+    "moderate_hazard": null,
+    "severe_hazard": null,
+    "extreme_hazard": null,
+    "ai_confidence": 0.88,
+    "needs_review": false,
+    "extraction_notes": "Extracted from satellite imagery and street-level photos; coordinates via geocoding."
+  },
+  {
+    "building_id": "B-NEW-002",
+    "latitude": -1.277,
+    "longitude": 36.822,
+    "neighbourhood": "Westlands",
+    "construction_class": "rcc",
+    "insured_value_ksh": 7500000,
+    "common_hazard": 0.08,
+    "occasional_hazard": 0.14,
+    "moderate_hazard": 0.21,
+    "severe_hazard": 0.29,
+    "extreme_hazard": 0.36,
+    "ai_confidence": 0.92,
+    "needs_review": false,
+    "extraction_notes": "High confidence; property records cross-referenced."
+  }
+]

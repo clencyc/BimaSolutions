@@ -1,0 +1,106 @@
+{
+  "version": "1.0",
+  "description": "Example model run summary returned for AI layer briefing generation",
+  "run_id": "run-a1b2c3d4",
+  "portfolio_building_count": 3,
+  "portfolio_total_insured_value_ksh": 13500000,
+  "losses_per_return_period": {
+    "common": 425000,
+    "occasional": 728000,
+    "moderate": 1089000,
+    "severe": 1340000,
+    "extreme": 1512000
+  },
+  "average_annual_loss_ksh": 486750,
+  "aal_calculation_method": "trapezoid_interpolation",
+  "ep_curve_points": [
+    {
+      "return_period_years": 2,
+      "annual_exceedance_probability": 0.5,
+      "loss_ksh": 425000
+    },
+    {
+      "return_period_years": 10,
+      "annual_exceedance_probability": 0.1,
+      "loss_ksh": 728000
+    },
+    {
+      "return_period_years": 50,
+      "annual_exceedance_probability": 0.02,
+      "loss_ksh": 1089000
+    },
+    {
+      "return_period_years": 100,
+      "annual_exceedance_probability": 0.01,
+      "loss_ksh": 1340000
+    },
+    {
+      "return_period_years": 250,
+      "annual_exceedance_probability": 0.004,
+      "loss_ksh": 1512000
+    }
+  ],
+  "construction_breakdown": [
+    {
+      "construction_class": "informal_iron_sheet",
+      "building_count": 1,
+      "total_insured_value_ksh": 2000000,
+      "average_damage_ratio": 0.45,
+      "total_loss_ksh": 780000
+    },
+    {
+      "construction_class": "masonry",
+      "building_count": 1,
+      "total_insured_value_ksh": 3500000,
+      "average_damage_ratio": 0.28,
+      "total_loss_ksh": 980000
+    },
+    {
+      "construction_class": "rcc",
+      "building_count": 1,
+      "total_insured_value_ksh": 8000000,
+      "average_damage_ratio": 0.12,
+      "total_loss_ksh": 960000
+    }
+  ],
+  "top_accumulation_areas": [
+    {
+      "neighbourhood_or_area": "Kibera",
+      "building_count": 2,
+      "total_insured_value_ksh": 5500000,
+      "total_loss_ksh": 1760000
+    },
+    {
+      "neighbourhood_or_area": "Westlands",
+      "building_count": 1,
+      "total_insured_value_ksh": 8000000,
+      "total_loss_ksh": 960000
+    }
+  ],
+  "limitations": [
+    "Hazard layer is an uncalibrated proxy (0-1 susceptibility), not measured depth",
+    "Portfolio is fully synthetic (test data)",
+    "No Kenya-specific depth-damage functions available; curves adapted from global research",
+    "Proxy does not account for drainage-driven flooding; purely pluvial/precipitation-based",
+    "Building attributes and insured values are synthetic; not validated against real assets",
+    "No climate-change recurrence updating in baseline model; scenario parameters allow uplift"
+  ],
+  "provenance": {
+    "config_version": "1.0",
+    "assumptions": {
+      "max_depth_m": 4.0,
+      "return_periods": {
+        "common": 2,
+        "occasional": 10,
+        "moderate": 50,
+        "severe": 100,
+        "extreme": 250
+      },
+      "damage_cap": 0.9
+    },
+    "portfolio_source": "synthetic",
+    "adjustment_set_id": null,
+    "scenario_parameters_id": null,
+    "source_tags": ["real_data", "proxy", "synthetic", "assumption", "ai_derived"]
+  }
+}
