@@ -46,6 +46,13 @@ Set these environment variables if needed:
 - `GEOCODER_PROVIDER=nominatim`
 - `GEOCODER_BASE_URL=https://nominatim.openstreetmap.org`
 - `GEOCODER_USER_AGENT=bimasolutions-flood-model/1.0`
+- `GEOCODER_DEFAULT_LOCALITY=Nairobi`
+- `GEOCODER_DEFAULT_COUNTRY=Kenya`
+
+Name geocoding behavior:
+- The API first tries `building_name + default locality + default country`
+- If that fails, it retries with just `building_name`
+- On success, the API maps the geocoded point to the nearest modeled building and returns a quote
 
 ## Available endpoints
 
@@ -87,10 +94,36 @@ Returns model metrics and validation outputs.
 ### `GET /quote/<building_id>`
 Returns a commercial quote for one building using the stored model output.
 
+Behavior:
+- First tries `<building_id>` as a portfolio ID.
+- If not found, it automatically falls back to treat the value as a building name.
+
 Example:
 
 ```bash
 curl http://127.0.0.1:5000/quote/NBO-0316
+curl http://127.0.0.1:5000/quote/Kencom
+```
+
+Tip: for multi-word names in a browser URL, use `%20` for spaces, e.g.
+
+```text
+http://127.0.0.1:5000/quote/Kencom%20House
+```
+
+### `GET /quote-by-name`
+Browser-friendly endpoint for name-based quote lookup.
+
+Query params:
+- `building_name` (or `name`) required for name geocoding mode
+- optional `city`, `country`
+- optional `latitude`, `longitude` as coordinate fallback
+
+Examples:
+
+```bash
+curl "http://127.0.0.1:5000/quote-by-name?building_name=Kencom%20House&city=Nairobi&country=Kenya"
+curl "http://127.0.0.1:5000/quote-by-name?building_name=Landmark%20Plaza&latitude=-1.2847&longitude=36.8247"
 ```
 
 ### `POST /quote`
@@ -106,6 +139,7 @@ This endpoint supports four modes:
    - send `building_name`
    - optional: `city`/`locality`, `country`
    - API geocodes the name and maps it to the nearest modeled building
+   - Works for arbitrary building names as long as OSM geocoding can resolve a location
 
 3. **Freeform underwriter manual mode**
    - send `building_name`

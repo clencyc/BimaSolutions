@@ -79,23 +79,39 @@ def create_app() -> Flask:
         if not building_name:
             raise ValueError("building_name is required for name-based quote mode")
 
-        locality = payload.get("locality") or payload.get("city")
-        country = payload.get("country")
-        query_parts = [str(building_name).strip()]
-        if locality:
-            query_parts.append(str(locality).strip())
-        if country:
-            query_parts.append(str(country).strip())
-        query = ", ".join([p for p in query_parts if p])
+        default_locality = os.getenv("GEOCODER_DEFAULT_LOCALITY", "Nairobi")
+        default_country = os.getenv("GEOCODER_DEFAULT_COUNTRY", "Kenya")
+        locality = payload.get("locality") or payload.get("city") or default_locality
+        country = payload.get("country") or default_country
+
+        building_name = str(building_name).strip()
+        query_candidates = []
+        if locality or country:
+            parts = [building_name]
+            if locality:
+                parts.append(str(locality).strip())
+            if country:
+                parts.append(str(country).strip())
+            query_candidates.append(", ".join([p for p in parts if p]))
+        query_candidates.append(building_name)
 
         provider = os.getenv("GEOCODER_PROVIDER", "nominatim").lower()
         if provider != "nominatim":
             raise ValueError(f"Unsupported GEOCODER_PROVIDER '{provider}'")
 
-        geocoded = _geocode_nominatim(query)
-        geocoded["provider"] = provider
-        geocoded["query"] = query
-        return geocoded
+        last_error: Exception | None = None
+        for query in query_candidates:
+            try:
+                geocoded = _geocode_nominatim(query)
+                geocoded["provider"] = provider
+                geocoded["query"] = query
+                geocoded["query_candidates"] = query_candidates
+                return geocoded
+            except ValueError as exc:
+                last_error = exc
+                continue
+
+        raise ValueError(f"No geocoding match found for query candidates: {query_candidates}") from last_error
 
     def _quote_from_payload(payload: dict) -> dict:
         """Build a quote from either a stored building or a manually entered building name."""
@@ -192,8 +208,53 @@ def create_app() -> Flask:
     @app.get("/quote/<building_id>")
     def quote_by_building(building_id: str):
         quote = _quote_from_payload({"building_id": building_id})
+        if "error" not in quote:
+            return jsonify(quote)
+
+        # Fallback: if not found as an internal portfolio id, treat the path
+        # value as a building name for browser-friendly testing.
+        fallback = _quote_from_payload({"building_name": building_id})
+        if "error" not in fallback:
+            fallback["path_interpreted_as"] = "building_name"
+            return jsonify(fallback)
+
+        # Preserve not-found for true id misses; return fallback error details
+        # when name-resolution fails.
+        if quote.get("error_type") == "not_found":
+            status = 400 if fallback.get("error_type") == "invalid_request" else 404
+            return jsonify(fallback), status
+        return jsonify(quote), 400
+
+    @app.get("/quote-by-name")
+    def quote_by_name():
+        building_name = request.args.get("building_name") or request.args.get("name")
+        city = request.args.get("city")
+        country = request.args.get("country")
+        latitude = request.args.get("latitude")
+        longitude = request.args.get("longitude")
+
+        payload: dict[str, object] = {}
+        if building_name:
+            payload["building_name"] = building_name
+        if city:
+            payload["city"] = city
+        if country:
+            payload["country"] = country
+        if latitude is not None and longitude is not None:
+            payload["latitude"] = latitude
+            payload["longitude"] = longitude
+
+        if not payload:
+            return jsonify({
+                "error": "Provide query params: building_name (or name), optionally city/country; or latitude and longitude",
+                "error_type": "invalid_request",
+            }), 400
+
+        quote = _quote_from_payload(payload)
         if "error" in quote:
-            return jsonify(quote), 404
+            error_type = quote.get("error_type", "invalid_request")
+            status = 404 if error_type == "not_found" else 400
+            return jsonify(quote), status
         return jsonify(quote)
 
     @app.post("/quote")
