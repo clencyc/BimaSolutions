@@ -106,11 +106,15 @@ def create_app() -> Flask:
             summary = _load_outputs()["summary"]
             match = summary.loc[summary["building_id"] == payload["building_id"]]
             if match.empty:
-                return {"error": f"Unknown building_id '{payload['building_id']}'"}
+                return {
+                    "error": f"Unknown building_id '{payload['building_id']}'",
+                    "error_type": "not_found",
+                }
             quote = commercial_quote(match.iloc[0])
             quote["building_id"] = payload["building_id"]
             if building_label:
                 quote["building_name"] = building_label
+            quote["quote_source"] = "portfolio_building_id"
             return quote
 
         if building_label or (payload.get("latitude") is not None and payload.get("longitude") is not None):
@@ -140,6 +144,7 @@ def create_app() -> Flask:
             except (ValueError, urlerror.URLError) as exc:
                 return {
                     "error": f"Unable to resolve building location: {exc}",
+                    "error_type": "invalid_request",
                     "hint": "Provide building_name (+ locality/country) or provide latitude and longitude",
                 }
 
@@ -148,6 +153,7 @@ def create_app() -> Flask:
         if missing:
             return {
                 "error": "Missing required fields for manual quote",
+                "error_type": "invalid_request",
                 "missing": missing,
                 "hint": "Provide building_id, or building_name, or manual pricing inputs (tiv_kes, expected_annual_loss_kes, risk_class, confidence)",
             }
@@ -198,7 +204,9 @@ def create_app() -> Flask:
 
         quote = _quote_from_payload(payload)
         if "error" in quote:
-            return jsonify(quote), 400 if "Missing required fields" in quote["error"] else 404
+            error_type = quote.get("error_type", "invalid_request")
+            status = 404 if error_type == "not_found" else 400
+            return jsonify(quote), status
         return jsonify(quote)
 
     @app.get("/metrics")

@@ -150,3 +150,36 @@ outputs/        machine-readable results and figures
 docs/           MODEL_DESIGN.md – requirement-to-implementation map
 Dataset/        private starter kit (gitignored)
 ```
+
+## 10. Quote API (Flask)
+
+Run the API from the project root:
+
+```bash
+source .venv/bin/activate
+python -m src.api
+```
+
+Main quote endpoint:
+
+```bash
+POST /quote
+```
+
+Examples:
+
+```bash
+# quote from stored building id
+curl -X POST http://127.0.0.1:5000/quote -H "Content-Type: application/json" -d '{"building_id":"NBO-0316"}'
+
+# quote from building name (open-source geocoding + nearest modeled building)
+curl -X POST http://127.0.0.1:5000/quote -H "Content-Type: application/json" -d '{"building_name":"Landmark Plaza Commercial Development","city":"Nairobi","country":"Kenya"}'
+
+# quote from coordinates fallback (if geocoding is unavailable)
+curl -X POST http://127.0.0.1:5000/quote -H "Content-Type: application/json" -d '{"building_name":"Landmark Plaza Commercial Development","latitude":-1.2847,"longitude":36.8247}'
+
+# quote from manual underwriting inputs
+curl -X POST http://127.0.0.1:5000/quote -H "Content-Type: application/json" -d '{"building_name":"Landmark Plaza Commercial Development","tiv_kes":522650000,"expected_annual_loss_kes":41030248.46,"risk_class":"very_high","confidence":"medium"}'
+```
+
+For full endpoint documentation, see [docs/API_SHARING_GUIDE.md](docs/API_SHARING_GUIDE.md).

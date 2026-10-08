@@ -96,7 +96,7 @@ curl http://127.0.0.1:5000/quote/NBO-0316
 ### `POST /quote`
 Returns a quote from a JSON payload.
 
-This endpoint supports three modes:
+This endpoint supports four modes:
 
 1. **Stored building mode**
    - send `building_id`
@@ -112,8 +112,14 @@ This endpoint supports three modes:
    - also send the pricing inputs below
    - the building is not required to exist in the portfolio
 
+4. **Coordinate fallback mode (recommended when geocoding is blocked)**
+   - send `building_name` (optional for display)
+   - send `latitude` and `longitude`
+   - API maps the point to the nearest modeled building and returns a quote
+
 Required fields by mode:
 - Name-based mode: `building_name`
+- Coordinate fallback mode: `latitude`, `longitude`
 - Manual mode:
 - `tiv_kes`
 - `expected_annual_loss_kes`
@@ -130,6 +136,14 @@ Example payload (name-based mode):
 }
 ```
 
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:5000/quote \
+   -H "Content-Type: application/json" \
+   -d '{"building_name":"Landmark Plaza Commercial Development","city":"Nairobi","country":"Kenya"}'
+```
+
 Example payload (manual mode):
 
 ```json
@@ -141,6 +155,48 @@ Example payload (manual mode):
   "confidence": "medium"
 }
 ```
+
+Example payload (coordinate fallback mode):
+
+```json
+{
+   "building_name": "Landmark Plaza Commercial Development",
+   "latitude": -1.2847,
+   "longitude": 36.8247
+}
+```
+
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:5000/quote \
+   -H "Content-Type: application/json" \
+   -d '{"building_name":"Landmark Plaza Commercial Development","latitude":-1.2847,"longitude":36.8247}'
+```
+
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:5000/quote \
+   -H "Content-Type: application/json" \
+   -d '{"building_name":"Landmark Plaza Commercial Development","tiv_kes":522650000,"expected_annual_loss_kes":41030248.46,"risk_class":"very_high","confidence":"medium"}'
+```
+
+Example request (stored building mode via `POST /quote`):
+
+```bash
+curl -X POST http://127.0.0.1:5000/quote \
+   -H "Content-Type: application/json" \
+   -d '{"building_id":"NBO-0316"}'
+```
+
+Status codes:
+
+- `200` quote returned
+- `400` invalid payload / unresolved name / missing fields
+- `404` unknown `building_id`
+
+If you get a `400` for name-based geocoding, use coordinate fallback mode.
 
 ## Pricing formula
 
@@ -177,6 +233,7 @@ A quote response includes:
 - `suggested_limit_kes`
 - `formula`
 - `assumptions`
+- `quote_source` (`portfolio_building_id`, `name_or_coordinates_nearest_portfolio`, `manual_inputs`)
 
 ## Team integration notes
 
