@@ -16,8 +16,29 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from . import model_api, interpretation_api, upload_api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('users.urls')),
+    path('api/upload/', upload_api.upload_and_extract, name='api-upload'),
+    path('api/interpretation/health/', interpretation_api.interpretation_health, name='interpretation-health'),
+    path('api/interpretation/summary/', interpretation_api.interpretation_summary, name='interpretation-summary'),
+    path('api/interpretation/question/', interpretation_api.interpretation_question, name='interpretation-question'),
+    path('api/model/health/', model_api.model_health, name='model-health'),
+    path('api/model/buildings/', model_api.model_buildings, name='model-buildings'),
+    path(
+        'api/model/portfolio-summary/',
+        model_api.model_portfolio_summary,
+        name='model-portfolio-summary',
+    ),
+    path('api/model/metrics/', model_api.model_metrics, name='model-metrics'),
+    path('api/model/formula/', model_api.model_formula, name='model-formula'),
+    path('api/model/extract/', model_api.model_extract_data, name='model-extract'),
+    path(
+        'api/model/quote/<str:building_id>/',
+        model_api.model_building_quote,
+        name='model-building-quote',
+    ),
+    path('api/model/quote/', model_api.model_custom_quote, name='model-custom-quote'),
 ]

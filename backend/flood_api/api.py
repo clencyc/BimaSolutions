@@ -9,17 +9,25 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Query
+from pydantic import ValidationError
 
 from flood_api.config import get_current_config
 from flood_api.modules.adjustments import AdjustmentRecord, AdjustmentSet, AdjustmentStore, validate_adjustment_item
 from flood_api.modules.engine import build_run_summary, calculate_aal, ep_curve_points, portfolio_loss_by_tier, validate_ep_curve
 from flood_api.modules.exposure import Portfolio, ExposureRow, build_sample_portfolio, normalize_exposure_row
 from flood_api.modules.hazard import apply_adjustment_to_hazard_score, candidate_hotspots
+from flood_api.extraction import (
+    ExtractionConfigurationError,
+    ExtractionServiceError,
+    extract_exposure_rows,
+)
 from flood_api.schemas.contracts import (
     AdjustmentCause,
     AdjustmentType,
     BriefingAttachmentRequest,
     BriefingValidationError,
+    ExtractDataRequest,
+    ExposureRowAI,
     HazardAdjustmentItem,
     HazardAdjustmentSet,
     HealthCheckResponse,
@@ -34,7 +42,7 @@ from flood_api.schemas.contracts import (
 app = FastAPI(
     title="Nairobi Flood Catastrophe Model API",
     version="0.1.0",
-    description="Deterministic urban pluvial flood risk engine for Nairobi. No LLM or external AI service is called by this API.",
+    description="Deterministic urban pluvial flood risk engine for Nairobi, with optional Groq-backed extraction.",
 )
 
 CONFIG = get_current_config()
@@ -137,6 +145,120 @@ def upload_portfolio(payload: PortfolioUploadRequest) -> Dict[str, Any]:
     }
 
 
+@app.post("/extract")
+def extract_data(payload: ExtractDataRequest) -> Dict[str, Any]:
+    """Extract unstructured data with Groq, validate it, then run the flood model."""
+    document = (
+        payload.document.model_dump()
+        if payload.document is not None
+        else None
+    )
+    try:
+        extracted_rows = extract_exposure_rows(payload.data, document)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except ExtractionConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ExtractionServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+    if not extracted_rows:
+        raise HTTPException(
+            status_code=422,
+            detail="No building exposure rows could be extracted",
+        )
+
+    rows = []
+    validation_errors = []
+    for index, raw_row in enumerate(extracted_rows):
+        if not isinstance(raw_row, dict):
+            validation_errors.append(
+                {"row": index, "errors": [{"msg": "Expected a JSON object"}]}
+            )
+            continue
+        try:
+            validated_row = ExposureRowAI.model_validate(raw_row)
+        except ValidationError as exc:
+            validation_errors.append(
+                {
+                    "row": index,
+                    "errors": exc.errors(
+                        include_url=False,
+                        include_input=False,
+                    ),
+                }
+            )
+            continue
+        row_data = validated_row.model_dump(mode="json")
+        available_hazards = [
+            row_data.get(f"{tier}_hazard")
+            for tier in ("common", "occasional", "moderate", "severe", "extreme")
+        ]
+        if not any(value is not None for value in available_hazards):
+            validation_errors.append(
+                {
+                    "row": index,
+                    "errors": [
+                        {
+                            "loc": ["hazard"],
+                            "msg": "At least one hazard tier is required to run the model",
+                        }
+                    ],
+                }
+            )
+            continue
+        if any(value is None for value in available_hazards):
+            row_data["needs_review"] = True
+        try:
+            rows.append(normalize_exposure_row(row_data))
+        except (ValueError, TypeError) as exc:
+            validation_errors.append(
+                {"row": index, "errors": [{"msg": str(exc)}]}
+            )
+
+    if validation_errors:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Extracted rows do not satisfy the model input contract",
+                "rows": validation_errors,
+            },
+        )
+
+    portfolio_id = f"portfolio-ai-{uuid4().hex[:8]}"
+    PORTFOLIOS[portfolio_id] = Portfolio(
+        portfolio_id=portfolio_id,
+        name=payload.portfolio_name,
+        rows=rows,
+        status="confirmed",
+        source="ai_derived",
+    )
+    model_run = run_model(ModelRunRequest(portfolio_id=portfolio_id))
+    warnings = []
+    if any(
+        row.common_hazard is None
+        or row.occasional_hazard is None
+        or row.moderate_hazard is None
+        or row.severe_hazard is None
+        or row.extreme_hazard is None
+        for row in rows
+    ):
+        warning = (
+            "Missing hazard tiers are treated as zero contribution; "
+            "losses and average annual loss may be understated."
+        )
+        warnings.append(warning)
+        model_run["summary"]["limitations"].append(warning)
+        model_run["provenance"]["limitations"].append(warning)
+    return {
+        "portfolio_id": portfolio_id,
+        "portfolio_name": payload.portfolio_name,
+        "extracted_rows": [row.as_dict() for row in rows],
+        "model_run": model_run,
+        "warnings": warnings,
+    }
+
+
 @app.post("/scenario/parameters")
 def create_scenario_parameters(payload: ScenarioParameterSet) -> Dict[str, Any]:
     """Persist scenario parameters with full provenance."""
@@ -162,24 +284,9 @@ def run_model(request: ModelRunRequest) -> Dict[str, Any]:
             row_dict["hazard_lookup_warning"] = "Raster data absent; missing hazard values left as-is."
         rows.append(row_dict)
 
-    if adjustment_set is not None:
-        # Explicitly apply only if requested by the caller.
-        for row in rows:
-            for tier in ["common", "occasional", "moderate", "severe", "extreme"]:
-                hazard_key = f"{tier}_hazard"
-                if row.get(hazard_key) is None:
-                    continue
-                score = float(row[hazard_key])
-                for adj in adjustment_set.adjustments:
-                    if adj.area_or_neighbourhood.lower() == str(row.get("neighbourhood", "")).lower():
-                        if adj.adjustment_type == "additive":
-                            score = max(0.0, min(1.0, score + adj.magnitude))
-                        else:
-                            score = max(0.0, min(1.0, score * adj.magnitude))
-                row[hazard_key] = score
-
     summary = build_run_summary(rows, config, adjustment_set)
     run_id = f"run-{uuid4().hex[:8]}"
+    summary["run_id"] = run_id
     result = {
         "run_id": run_id,
         "summary": summary,
@@ -210,22 +317,9 @@ def compare_models(request: ModelCompareRequest) -> Dict[str, Any]:
 
     config = get_current_config()
     unadjusted_rows = [row.as_dict() for row in portfolio.rows]
-    adjusted_rows = [row.as_dict() for row in portfolio.rows]
     adj_set = ADJUSTMENT_STORE.get(request.adjustment_set_id)
-    if adj_set:
-        for row in adjusted_rows:
-            for tier in ["common", "occasional", "moderate", "severe", "extreme"]:
-                hazard_key = f"{tier}_hazard"
-                if row.get(hazard_key) is None:
-                    continue
-                score = float(row[hazard_key])
-                for adj in adj_set.adjustments:
-                    if adj.area_or_neighbourhood.lower() == str(row.get("neighbourhood", "")).lower():
-                        score = max(0.0, min(1.0, score + adj.magnitude if adj.adjustment_type == "additive" else score * adj.magnitude))
-                row[hazard_key] = score
-
     baseline = build_run_summary(unadjusted_rows, config, None)
-    adjusted = build_run_summary(adjusted_rows, config, adj_set)
+    adjusted = build_run_summary(unadjusted_rows, config, adj_set)
     deltas = {}
     for tier in ["common", "occasional", "moderate", "severe", "extreme"]:
         baseline_loss = Decimal(str(baseline["losses_per_return_period"][tier]))

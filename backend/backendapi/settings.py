@@ -10,10 +10,21 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Load environment variables from .env file
+for env_path in (BASE_DIR / '.env', BASE_DIR / 'backend' / '.env'):
+    if env_path.is_file():
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, val = line.split('=', 1)
+                    os.environ.setdefault(key.strip(), val.strip().strip("'\""))
 
 
 # Quick-start development settings - unsuitable for production
@@ -28,7 +39,14 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "e0b1-165-90-19-21.ngrok-free.app",
     "http://localhost:8000",
-    "localhost"
+    "9059-2c0f-fe38-2011-320d-14ba-4879-381f-5e33.ngrok-free.app",
+    "https://9059-2c0f-fe38-2011-320d-14ba-4879-381f-5e33.ngrok-free.app",
+    "localhost",
+    "https://c467-102-135-170-51.ngrok-free.app",
+    "https://5990-102-135-170-51.ngrok-free.app",
+    "5990-102-135-170-51.ngrok-free.app",
+    "127.0.0.1:8000",
+    "127.0.0.1"
 ]
 
 
@@ -42,11 +60,30 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'users',
     'flood_api'
 ]
 
 AUTH_USER_MODEL = 'users.User'
+FLOOD_MODEL_API_BASE_URL = os.environ.get(
+    'FLOOD_MODEL_API_BASE_URL',
+    'https://80e2-165-90-19-21.ngrok-free.app',
+).rstrip('/')
+INTERPRETATION_API_BASE_URL = os.environ.get(
+    'INTERPRETATION_API_BASE_URL',
+    'https://106f-165-90-19-21.ngrok-free.app',
+).rstrip('/')
+AUTHENTICATION_BACKENDS = [
+    'users.authentication.EmailBackend',
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -1,13 +1,9 @@
-from django.shortcuts import render
-from django.shortcuts import render
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 
 from .serializers import UserCreateSerializer
 
@@ -21,7 +17,12 @@ def login(request):
     email = request.data.get("email")
     password = request.data.get("password")
 
-    if not email or not password:
+    if (
+        not isinstance(email, str)
+        or not email.strip()
+        or not isinstance(password, str)
+        or not password
+    ):
         return Response(
             {"detail": "Email and password are required"},
             status=status.HTTP_400_BAD_REQUEST,
@@ -78,6 +79,11 @@ def logout(request):
         )
     try:
         token = RefreshToken(refresh_token)
+        if str(token.get("user_id")) != str(request.user.pk):
+            return Response(
+                {"detail": "Refresh token does not belong to the authenticated user"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         token.blacklist()
     except TokenError:
         return Response(
@@ -93,4 +99,3 @@ def logout(request):
 # def logout(request):
 #     request.user.auth_token.delete()
 #     return Response({"detail": "logged out"})
-

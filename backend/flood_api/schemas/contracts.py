@@ -7,7 +7,13 @@ from typing import List, Optional, Dict, Any, Literal
 from decimal import Decimal
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ConfigDict,
+    field_validator,
+    model_validator,
+)
 
 
 class SourceTag(str, Enum):
@@ -378,6 +384,40 @@ class PortfolioUploadRequest(BaseModel):
     rows: List[Dict[str, Any]] = Field(
         ..., description="Exposure data as list of dicts (CSV rows)"
     )
+
+
+class ExtractDocumentRequest(BaseModel):
+    """Base64-encoded document sent to the extraction endpoint."""
+
+    mime_type: Literal[
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ]
+    data_base64: str = Field(..., min_length=1)
+
+
+class ExtractDataRequest(BaseModel):
+    """Unstructured text/JSON or a document to extract into model rows."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    data: Any = None
+    document: Optional[ExtractDocumentRequest] = None
+    portfolio_name: str = Field(
+        default="Extracted portfolio", min_length=1, max_length=200
+    )
+
+    @model_validator(mode="after")
+    def require_one_input(self):
+        if (self.data is None) == (self.document is None):
+            raise ValueError("Provide exactly one of data or document")
+        if isinstance(self.data, str) and not self.data.strip():
+            raise ValueError("data must not be empty")
+        return self
 
 
 class ModelRunRequest(BaseModel):

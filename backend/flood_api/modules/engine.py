@@ -137,8 +137,8 @@ def calculate_annual_average_loss(
         [float(loss) for _, (_, loss) in sorted_items]
     )
 
-    aal = np.trapz(losses_float, exceedance_probs)
-    return Decimal(str(max(0.0, aal)))
+    aal = abs(np.trapezoid(losses_float, exceedance_probs))
+    return Decimal(str(aal))
 
 
 def validate_damage_bounds(damage_ratio: float) -> None:
@@ -183,3 +183,177 @@ def apply_adjustment_to_score(
         raise ValueError(f"Unknown adjustment type: {adjustment_type}")
 
     return min(max(0.0, adjusted), 1.0)
+
+
+def depth_from_hazard_score(hazard_score: float, config: Dict) -> float:
+    """Convert a hazard score using the configured maximum flood depth."""
+    return calculate_depth_from_hazard(
+        hazard_score, config["hazard"]["max_depth_m"]
+    )
+
+
+def loss_for_building(building: Dict, tier_key: str, config: Dict) -> Decimal:
+    """Calculate one building's loss for a return-period tier."""
+    hazard_score = building.get(f"{tier_key}_hazard")
+    if hazard_score is None:
+        return Decimal(0)
+    depth = depth_from_hazard_score(hazard_score, config)
+    construction_class = building["construction_class"]
+    curve_pairs = config["vulnerability"]["construction_classes"][
+        construction_class
+    ]["depth_damage_curve"]["pairs"]
+    damage = min(
+        interpolate_damage(depth, curve_pairs),
+        config["vulnerability"]["damage_cap"],
+    )
+    return calculate_loss_for_building(
+        damage, Decimal(str(building["insured_value_ksh"]))
+    )
+
+
+def portfolio_loss_by_tier(
+    buildings: List[Dict], tier_key: str, config: Dict
+) -> Decimal:
+    """Calculate total portfolio loss for one tier."""
+    return sum(
+        (loss_for_building(building, tier_key, config) for building in buildings),
+        Decimal(0),
+    )
+
+
+def calculate_aal(losses_by_tier: Dict[str, Decimal], config: Dict) -> Decimal:
+    """Calculate annual average loss using configured return periods."""
+    losses_per_period = {
+        tier: (config["return_periods"][tier], loss)
+        for tier, loss in losses_by_tier.items()
+        if tier in config["return_periods"]
+    }
+    return calculate_annual_average_loss(losses_per_period)
+
+
+def ep_curve_points(
+    losses_by_tier: Dict[str, Decimal], config: Dict
+) -> List[Dict]:
+    """Build EP-curve points ordered from most to least frequent event."""
+    return [
+        {
+            "return_period_years": config["return_periods"][tier],
+            "annual_exceedance_probability": (
+                1.0 / config["return_periods"][tier]
+            ),
+            "loss_ksh": loss,
+        }
+        for tier, loss in sorted(
+            losses_by_tier.items(),
+            key=lambda item: config["return_periods"][item[0]],
+        )
+        if tier in config["return_periods"]
+    ]
+
+
+def validate_ep_curve(points: List[Dict]) -> None:
+    """Raise when loss declines as event rarity increases."""
+    validate_ep_curve_monotonicity(
+        [
+            (
+                point["annual_exceedance_probability"],
+                float(point["loss_ksh"]),
+            )
+            for point in points
+        ]
+    )
+
+
+def apply_adjustment_set_to_rows(
+    rows: List[Dict], adjustment_set
+) -> List[Dict]:
+    """Return copied rows with matching neighbourhood hazard scores adjusted."""
+    adjusted_rows = [dict(row) for row in rows]
+    if adjustment_set is None:
+        return adjusted_rows
+
+    for row in adjusted_rows:
+        for tier in ("common", "occasional", "moderate", "severe", "extreme"):
+            key = f"{tier}_hazard"
+            if row.get(key) is not None:
+                score = float(row[key])
+                neighbourhood = str(row.get("neighbourhood", "")).lower()
+                for adjustment in adjustment_set.adjustments:
+                    if adjustment.area_or_neighbourhood.lower() == neighbourhood:
+                        score = apply_adjustment_to_score(
+                            score,
+                            adjustment.adjustment_type,
+                            adjustment.magnitude,
+                        )
+                row[key] = score
+    return adjusted_rows
+
+
+def build_run_summary(
+    rows: List[Dict], config: Dict, adjustment_set=None
+) -> Dict:
+    """Calculate the deterministic summary returned for a model run."""
+    model_rows = apply_adjustment_set_to_rows(rows, adjustment_set)
+    tiers = ("common", "occasional", "moderate", "severe", "extreme")
+    losses = {
+        tier: portfolio_loss_by_tier(model_rows, tier, config)
+        for tier in tiers
+    }
+    construction_totals = {}
+    area_totals = {}
+    for row in model_rows:
+        construction = row["construction_class"]
+        construction_summary = construction_totals.setdefault(
+            construction,
+            {"building_count": 0, "total_insured_value_ksh": Decimal(0), "total_loss_ksh": Decimal(0)},
+        )
+        construction_summary["building_count"] += 1
+        insured_value = Decimal(str(row["insured_value_ksh"]))
+        construction_summary["total_insured_value_ksh"] += insured_value
+        area = row["neighbourhood"]
+        area_summary = area_totals.setdefault(
+            area,
+            {"building_count": 0, "total_insured_value_ksh": Decimal(0), "total_loss_ksh": Decimal(0)},
+        )
+        area_summary["building_count"] += 1
+        area_summary["total_insured_value_ksh"] += insured_value
+        for tier in tiers:
+            loss = loss_for_building(row, tier, config)
+            construction_summary["total_loss_ksh"] += loss
+            area_summary["total_loss_ksh"] += loss
+
+    construction_breakdown = []
+    for construction, values in construction_totals.items():
+        total_value = values["total_insured_value_ksh"]
+        construction_breakdown.append(
+            {
+                "construction_class": construction,
+                **values,
+                "average_damage_ratio": (
+                    float(values["total_loss_ksh"] / (total_value * len(tiers)))
+                    if total_value
+                    else 0.0
+                ),
+            }
+        )
+    top_areas = [
+        {"neighbourhood_or_area": area, **values}
+        for area, values in sorted(
+            area_totals.items(),
+            key=lambda item: item[1]["total_loss_ksh"],
+            reverse=True,
+        )[:10]
+    ]
+    return {
+        "portfolio_building_count": len(model_rows),
+        "portfolio_total_insured_value_ksh": sum(
+            (Decimal(str(row["insured_value_ksh"])) for row in model_rows),
+            Decimal(0),
+        ),
+        "losses_per_return_period": losses,
+        "average_annual_loss_ksh": calculate_aal(losses, config),
+        "ep_curve_points": ep_curve_points(losses, config),
+        "construction_breakdown": construction_breakdown,
+        "top_accumulation_areas": top_areas,
+        "limitations": config.get("limitations", []),
+    }
