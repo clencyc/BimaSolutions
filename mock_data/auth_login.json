@@ -1,8 +1,0 @@
-{
-  "token": "mock-jwt-token-123",
-  "user": {
-    "email": "analyst@nimrod-risk.co.ke",
-    "name": "Nairobi Risk Analyst",
-    "role": "Portfolio Analyst"
-  }
-}

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A static preview of Nairobi urban flood risk and insured portfolio losses."
+    />
+    <title>Nairobi Urban Flood Risk | Nairobi Flood</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="Nairobi Flood overview">
+        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2 7c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 12c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 17c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2" />
+        </svg>
+        <span class="brand-copy">
+          <strong>Nairobi Flood</strong>
+          <span>Urban pluvial risk · Team A</span>
+        </span>
+      </a>
+
+      <nav class="navigation" aria-label="Dashboard navigation">
+        <a class="nav-link active" href="#overview" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+          Overview
+        </a>
+        <a class="nav-link" href="#ep-curve">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h17M7 15l4-4 3 2 6-7M17 6h3v3" /></svg>
+          EP Curve
+        </a>
+        <a class="nav-link" href="#hotspots">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+          Hotspots
+        </a>
+        <a class="nav-link" href="#drainage-reports">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4m-4 2a4 4 0 0 0 8 0M7 12a5 5 0 1 0 10 0M12 16v5m-5 0h10" /></svg>
+          Drainage Reports
+        </a>
+        <a class="nav-link" href="#generate-report">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6m-6 4h6" /></svg>
+          Generate Report
+        </a>
+        <a class="nav-link" href="#methodology">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3H12v18H5.5A2.5 2.5 0 0 0 3 23zm18 0A2.5 2.5 0 0 0 18.5 3H12v18h6.5a2.5 2.5 0 0 1 2.5 2z" /></svg>
+          Methodology
+        </a>
+      </nav>
+      <p class="sidebar-note">Static preview · No backend connected</p>
+    </aside>
+
+    <main id="overview">
+      <header class="page-header">
+        <div>
+          <h1>Nairobi Urban Flood Risk</h1>
+          <p class="page-subtitle">
+            What surface-water flooding could cost an insured portfolio in Nairobi — and how much we<br class="desktop-break" />
+            trust the answer.
+          </p>
+        </div>
+        <button class="primary-button" id="generateReport" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6m-6 4h6" /></svg>
+          Generate report
+        </button>
+      </header>
+
+      <section class="kpi-grid" aria-label="Portfolio summary">
+        <article class="card kpi-card">
+          <div class="kpi-top">
+            <svg class="kpi-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17 9 11l4 4 8-9m-6 0h6v6" /></svg>
+            <span class="badge">Sample</span>
+          </div>
+          <p class="kpi-label">Loss in a <abbr title="A flood with a 1% annual chance of occurring">100-year</abbr> event</p>
+          <strong class="kpi-value">KES 712M</strong>
+          <p class="kpi-caption">About a 1% chance in any year</p>
+        </article>
+        <article class="card kpi-card">
+          <div class="kpi-top">
+            <svg class="kpi-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="13" rx="1" /><path d="M9 8V4h6v4M8 12h2m4 0h2m-8 4h2m4 0h2m-6 5v-4h4v4" /></svg>
+            <span class="badge synthetic">Synthetic</span>
+          </div>
+          <p class="kpi-label">Insured value</p>
+          <strong class="kpi-value">KES 6.36B</strong>
+          <p class="kpi-caption">600 buildings</p>
+        </article>
+        <article class="card kpi-card">
+          <div class="kpi-top">
+            <svg class="kpi-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+            <span class="badge">Sample</span>
+          </div>
+          <p class="kpi-label">Known hotspots caught</p>
+          <strong class="kpi-value">12 of 24</strong>
+          <p class="kpi-caption">Government-named flood areas</p>
+        </article>
+        <article class="card kpi-card">
+          <div class="kpi-top">
+            <svg class="kpi-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17 9 11l4 4 8-9m-6 0h6v6" /></svg>
+            <span class="badge">Sample</span>
+          </div>
+          <p class="kpi-label">100-yr loss as % of value</p>
+          <strong class="kpi-value">11.2%</strong>
+          <p class="kpi-caption">Share of the portfolio lost</p>
+        </article>
+      </section>
+
+      <section class="overview-grid" aria-label="Flood risk overview">
+        <article class="card story-card">
+          <h2>The story in three lines</h2>
+          <ol class="story-list">
+            <li><strong>Losses grow fast with rarer storms.</strong> A 250-year flood costs roughly 5.7× a 10-year one.</li>
+            <li><strong>Poorer housing takes the biggest hit.</strong> Informal and semi-permanent homes carry most of the loss, so <abbr title="Multiple properties affected by the same flood event">accumulation</abbr> clusters in dense settlements.</li>
+            <li><strong>The model misses drainage-driven flooding.</strong> It only sees terrain and rivers, so half the known hotspots go undetected — real losses are probably higher.</li>
+          </ol>
+        </article>
+
+        <article class="card explore-card">
+          <h2>Explore</h2>
+          <div class="explore-links">
+            <a href="#ep-curve">Loss by return period <span aria-hidden="true">→</span></a>
+            <a href="#hotspots">Hotspot map <span aria-hidden="true">→</span></a>
+            <a href="#drainage-reports">Drainage reports <span aria-hidden="true">→</span></a>
+            <a href="#methodology">Methodology &amp; limitations <span aria-hidden="true">→</span></a>
+          </div>
+        </article>
+      </section>
+
+      <aside class="reality-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5m0-8h.01" /></svg>
+        <p><strong>What's real here?</strong> Hotspot names and locations are real. The building portfolio is synthetic, the hazard layer is a proxy built from terrain and rivers (not measured flood depth), and loss figures are plausible values until the model backend is connected. Look for the coloured labels on every number.</p>
+      </aside>
+
+      <section class="detail-grid" aria-label="Dashboard details">
+        <article class="card detail-card" id="ep-curve">
+          <p class="eyebrow">Portfolio risk</p>
+          <h2>Loss by return period</h2>
+          <p class="detail-copy">Sample loss estimate for a flood event of the given return period. A 100-year event has about a 1% chance of occurring in any year.</p>
+          <div class="period-list">
+            <div><span>10-year event</span><strong>KES 125M <small>Sample</small></strong></div>
+            <div><span>100-year event</span><strong>KES 712M <small>Sample</small></strong></div>
+            <div><span>250-year event</span><strong>~5.7× 10-year loss <small>Sample</small></strong></div>
+          </div>
+        </article>
+        <article class="card detail-card" id="hotspots">
+          <p class="eyebrow">Hazard coverage</p>
+          <h2>Known flood hotspots</h2>
+          <p class="detail-copy">The current terrain-and-river proxy identifies 12 of 24 government-named flood areas. The remaining locations may be affected by local drainage that the model does not capture.</p>
+          <div class="coverage-stat"><strong>12 / 24</strong><span>known hotspots caught <span class="badge">Sample</span></span></div>
+        </article>
+        <article class="card detail-card" id="drainage-reports">
+          <p class="eyebrow">Data source</p>
+          <h2>Drainage reports</h2>
+          <p class="detail-copy">Drainage-driven flood reports are not connected in this static preview. They will help explain areas the terrain-and-river hazard proxy can miss.</p>
+          <span class="status-pill"><span></span>Awaiting backend connection</span>
+        </article>
+        <article class="card detail-card" id="generate-report">
+          <p class="eyebrow">Printable summary</p>
+          <h2>Generate report</h2>
+          <p class="detail-copy">Create a printable copy of this dashboard using your browser's print dialog. You can choose “Save as PDF” to keep a local report.</p>
+          <button class="secondary-button" id="printReport" type="button">Print or save as PDF</button>
+        </article>
+        <article class="card detail-card methodology-card" id="methodology">
+          <p class="eyebrow">Read before use</p>
+          <h2>Methodology &amp; limitations</h2>
+          <p class="detail-copy">This preview uses a terrain-and-river hazard proxy, not measured flood depths. The building portfolio and monetary loss values are synthetic examples. Real drainage reports and the production model are not connected; treat all estimates as illustrative, not as underwriting or emergency-response advice.</p>
+        </article>
+      </section>
+      <footer class="page-footer">Nairobi Flood · Static dashboard preview · Illustrative figures only</footer>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
