@@ -17,10 +17,104 @@ OUTPUT_DIR = PROJECT_ROOT / "outputs"
 FIGURE_DIR = OUTPUT_DIR / "figures"
 MODEL_DIR = OUTPUT_DIR / "models"
 
+# Default starter-kit filenames kept as fallbacks for backwards compatibility.
+# The project now prefers auto-discovery from a dataset folder so a new dataset
+# can be dropped into DATA_DIR and the model can run without changing the
+# file references in the pipeline.
 EXPOSURE_WITH_HAZARD_FILE = DATA_DIR / "exposure_nairobi_with_hazard.csv"
 EXPOSURE_SYNTHETIC_FILE = DATA_DIR / "exposure_nairobi_synthetic.csv"
 HOTSPOTS_FILE = DATA_DIR / "nairobi_hotspots_geocoded.csv"
 RASTER_TEMPLATE = "nairobi_pluvial_proxy_{tier}.tif"
+
+
+def _as_path(value: Path | str | None) -> Path:
+    return Path(value) if value is not None else DATA_DIR
+
+
+def resolve_dataset_file(data_dir: Path | str | None, patterns: list[str], *, required: bool = True) -> Path:
+    """Return the first matching file in a dataset folder using simple glob patterns."""
+    data_dir = _as_path(data_dir)
+    if data_dir.is_file():
+        return data_dir
+
+    matches: list[Path] = []
+    for pattern in patterns:
+        matches.extend(sorted(data_dir.glob(pattern)))
+
+    unique_matches = []
+    for match in matches:
+        if match not in unique_matches:
+            unique_matches.append(match)
+
+    if not unique_matches:
+        if not required:
+            return Path()
+        raise FileNotFoundError(
+            f"No dataset file found in '{data_dir}' using patterns: {patterns}. "
+            "Drop the dataset into this folder and keep the expected naming pattern or use "
+            "the file path directly."
+        )
+
+    return unique_matches[0]
+
+
+def resolve_exposure_file(data_dir: Path | str | None = None) -> Path:
+    """Select the exposure CSV automatically from the dataset folder."""
+    return resolve_dataset_file(
+        data_dir or DATA_DIR,
+        [
+            "*exposure*.csv",
+            "*portfolio*.csv",
+            "*building*.csv",
+            "*.csv",
+        ],
+    )
+
+
+def resolve_hotspots_file(data_dir: Path | str | None = None) -> Path:
+    """Select the hotspots CSV automatically from the dataset folder."""
+    return resolve_dataset_file(
+        data_dir or DATA_DIR,
+        [
+            "*hotspot*.csv",
+            "*flood*.csv",
+            "*risk*.csv",
+            "*.csv",
+        ],
+    )
+
+
+def resolve_raster_files(data_dir: Path | str | None = None) -> dict[str, Path]:
+    """Resolve hazard rasters by tier if present or by a generic proxy raster pattern."""
+    data_dir = _as_path(data_dir or DATA_DIR)
+    if data_dir.is_file():
+        return {"common": data_dir}
+
+    matches = sorted(data_dir.glob("*.tif"))
+    if not matches:
+        raise FileNotFoundError(f"No GeoTIFF rasters found in '{data_dir}'.")
+
+    resolved: dict[str, Path] = {}
+    for tier in TIERS:
+        target = data_dir / RASTER_TEMPLATE.format(tier=tier)
+        if target.exists():
+            resolved[tier] = target
+
+    if resolved:
+        return resolved
+
+    for path in matches:
+        name = path.name.lower()
+        for tier in TIERS:
+            if tier in name:
+                resolved[tier] = path
+                break
+
+    if resolved:
+        return resolved
+
+    return {"common": matches[0]}
+
 
 RANDOM_SEED = 42
 

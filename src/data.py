@@ -83,30 +83,40 @@ def read_geotiff(path: Path) -> Raster:
 
 
 def load_hazard_rasters(data_dir: Path = config.DATA_DIR) -> dict[str, Raster]:
-    """Load the five proxy rasters keyed by tier name."""
-    return {tier: read_geotiff(data_dir / config.RASTER_TEMPLATE.format(tier=tier))
-            for tier in config.TIERS}
+    """Load the proxy rasters keyed by tier name from a folder."""
+    if isinstance(data_dir, (str, Path)):
+        data_dir = Path(data_dir)
+
+    if data_dir.is_file():
+        return {"common": read_geotiff(data_dir)}
+
+    resolved = config.resolve_raster_files(data_dir)
+    return {tier: read_geotiff(path) for tier, path in resolved.items()}
 
 
-def _validate(df: pd.DataFrame, required: list[str], name: str) -> None:
-    missing = [c for c in required if c not in df.columns]
-    if missing:
-        raise ValueError(f"{name} is missing required columns: {missing}")
+def load_exposure(path: Path | str | None = None) -> pd.DataFrame:
+    """Load the exposure portfolio from either a file or a dataset folder."""
+    if path is None:
+        path = config.resolve_exposure_file(config.DATA_DIR)
+    elif isinstance(path, (str, Path)) and not Path(path).suffix.lower().endswith(".csv"):
+        path = config.resolve_exposure_file(path)
 
-
-def load_exposure(path: Path = config.EXPOSURE_WITH_HAZARD_FILE) -> pd.DataFrame:
-    """Load the synthetic exposure portfolio (with or without hazard columns)."""
     df = pd.read_csv(path)
-    _validate(df, REQUIRED_EXPOSURE_COLUMNS, path.name)
+    _validate(df, REQUIRED_EXPOSURE_COLUMNS, Path(path).name)
     if not df["loc_id"].is_unique:
         raise ValueError("loc_id must be unique")
     return df
 
 
-def load_hotspots(path: Path = config.HOTSPOTS_FILE) -> pd.DataFrame:
-    """Load the 24 geocoded government flood hotspots."""
+def load_hotspots(path: Path | str | None = None) -> pd.DataFrame:
+    """Load hotspot data from either a file or a dataset folder."""
+    if path is None:
+        path = config.resolve_hotspots_file(config.DATA_DIR)
+    elif isinstance(path, (str, Path)) and not Path(path).suffix.lower().endswith(".csv"):
+        path = config.resolve_hotspots_file(path)
+
     df = pd.read_csv(path)
-    _validate(df, REQUIRED_HOTSPOT_COLUMNS, path.name)
+    _validate(df, REQUIRED_HOTSPOT_COLUMNS, Path(path).name)
     return df
 
 
@@ -141,3 +151,9 @@ def nearest_point_distance(lat, lon, ref_lat, ref_lon) -> tuple[np.ndarray, np.n
     d = haversine_m(lat, lon, np.asarray(ref_lat, float)[None, :], np.asarray(ref_lon, float)[None, :])
     idx = d.argmin(axis=1)
     return d[np.arange(len(idx)), idx], idx
+
+
+def _validate(df: pd.DataFrame, required: list[str], name: str) -> None:
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        raise ValueError(f"{name} is missing required columns: {missing}")

@@ -35,8 +35,10 @@ def run_pipeline(data_dir: Path = config.DATA_DIR, n_boot: int = 100,
     np.random.seed(seed)
 
     # ---- 1. data ---------------------------------------------------------- #
-    raw = data.load_exposure(data_dir / config.EXPOSURE_WITH_HAZARD_FILE.name)
-    hotspots = data.load_hotspots(data_dir / config.HOTSPOTS_FILE.name)
+    exposure_file = config.resolve_exposure_file(data_dir)
+    hotspots_file = config.resolve_hotspots_file(data_dir)
+    raw = data.load_exposure(exposure_file)
+    hotspots = data.load_hotspots(hotspots_file)
     rasters = data.load_hazard_rasters(data_dir)
     log(f"[data] {len(raw)} buildings, {len(hotspots)} hotspots, {len(rasters)} rasters")
 
